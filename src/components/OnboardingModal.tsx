@@ -64,6 +64,12 @@ export interface OnboardingModalProps {
   allowClickOutside?: boolean;
 
   /**
+   * Optional container to mount the modal into (via Portal). 
+   * Useful for mounting into a specific div instead of document.body.
+   */
+  container?: HTMLElement | null;
+
+  /**
    * Target specific internal elements for styling.
    */
   classNames?: {
@@ -196,6 +202,7 @@ export function OnboardingModal({
   style,
   className,
   allowClickOutside = true, 
+  container, // New prop
   classNames = {},
   styles = {},
 }: OnboardingModalProps) {
@@ -231,8 +238,8 @@ export function OnboardingModal({
     const themeClasses = activeTheme.classNames || {};
     return {
       overlay: cn(
-        // If backdrop prop is set to anything other than default, we override theme overlay
-        backdrop !== "default" ? backdropClass : themeClasses.overlay,
+        themeClasses.overlay, 
+        backdropClass, 
         classNames.overlay
       ),
       content: cn(themeClasses.content, classNames.content),
@@ -273,6 +280,7 @@ export function OnboardingModal({
       }}
     >
       <DialogContent 
+        container={container} // Pass container to portal
         overlayClassName={mergedClassNames.overlay}
         style={{ ...mergedRootStyle, ...styles.content }}
         className={cn(
