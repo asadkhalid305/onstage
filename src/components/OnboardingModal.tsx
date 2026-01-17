@@ -221,7 +221,6 @@ export function OnboardingModal({
   const mergedRootStyle = { ...activeTheme.style, ...style };
 
   // 4. Merge ClassNames: Theme classes + User classes
-  // We need to merge nested classNames carefully
   const mergedClassNames = useMemo(() => {
     const themeClasses = activeTheme.classNames || {};
     return {
@@ -301,7 +300,13 @@ export function OnboardingModal({
                />
              ) : (
                <picture className={cn("w-full h-full relative z-10 flex items-center justify-center", mergedClassNames.image)} style={styles.image}>
-                 <source media="(min-width: 640px)" srcSet={currentStep.image.desktop} />
+                 {/* Desktop: > 1024px */}
+                 <source media="(min-width: 1024px)" srcSet={currentStep.image.desktop} />
+                 
+                 {/* Tablet: > 640px. Uses tablet image if available, otherwise falls back to desktop */}
+                 <source media="(min-width: 640px)" srcSet={currentStep.image.tablet || currentStep.image.desktop} />
+                 
+                 {/* Mobile: Default (< 640px) */}
                  <img 
                    src={currentStep.image.mobile} 
                    alt={currentStep.title}

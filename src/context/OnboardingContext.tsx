@@ -1,4 +1,4 @@
-import {
+import React, {
   createContext,
   useContext,
   useState,
@@ -10,7 +10,7 @@ import {
 export interface OnboardingStep {
   title: string;
   description: string;
-  image: string | { mobile: string; desktop: string };
+  image: string | { mobile: string; tablet?: string; desktop: string };
 }
 
 interface OnboardingContextValue {
@@ -95,6 +95,7 @@ export function OnboardingProvider({
       skipOnboarding,
       finishOnboarding,
       resetOnboarding,
+      setIsOpen,
     ]
   );
 
