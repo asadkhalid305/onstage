@@ -49,6 +49,18 @@ export interface OnboardingModalProps {
   className?: string;
 
   /**
+   * Whether to show the 'X' close button in the corner.
+   * @default false
+   */
+  showCloseButton?: boolean;
+
+  /**
+   * Whether to allow closing the modal by clicking the overlay or pressing Escape.
+   * @default false
+   */
+  allowClickOutside?: boolean;
+
+  /**
    * Target specific internal elements for styling.
    */
   classNames?: {
@@ -179,6 +191,8 @@ export function OnboardingModal({
   customGradientClass,
   style,
   className,
+  showCloseButton = false,
+  allowClickOutside = false,
   classNames = {},
   styles = {},
 }: OnboardingModalProps) {
@@ -237,28 +251,27 @@ export function OnboardingModal({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent 
         style={{ ...mergedRootStyle, ...styles.content }}
+        hideCloseButton={!showCloseButton}
         className={cn(
           isDarkMode && "dark",
-          // Base Styles
-          "max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden gap-0 z-[50001] [&>button]:hidden rounded-xl sm:rounded-lg",
+          "max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden gap-0 z-[50001] rounded-xl sm:rounded-lg",
           "bg-background text-foreground",
           activeTheme.className,
           className,
           mergedClassNames.content
         )}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => {
+          if (!allowClickOutside) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (!allowClickOutside) e.preventDefault();
+        }}
       >
-        {/* Step Image Area - RESPONSIVE ASPECT RATIOS */}
+        {/* Step Image Area */}
         <div 
           className={cn(
             "w-full relative flex items-center justify-center overflow-hidden bg-background transition-all duration-300",
-            // Mobile: 4/5 aspect ratio
-            "aspect-[4/5]",
-            // Tablet: 4/3 aspect ratio
-            "sm:aspect-[4/3]", 
-            // Desktop: 16/9 aspect ratio
-            "lg:aspect-[16/9]",
+            "aspect-[4/5] sm:aspect-[4/3] lg:aspect-[16/9]",
             mergedClassNames.imageContainer
           )}
           style={styles.imageContainer}
@@ -283,13 +296,8 @@ export function OnboardingModal({
                />
              ) : (
                <picture className={cn("w-full h-full relative z-10 flex items-center justify-center", mergedClassNames.image)} style={styles.image}>
-                 {/* Desktop: > 1024px */}
                  <source media="(min-width: 1024px)" srcSet={currentStep.image.desktop} />
-                 
-                 {/* Tablet: > 640px */}
                  <source media="(min-width: 640px)" srcSet={currentStep.image.tablet || currentStep.image.desktop} />
-                 
-                 {/* Mobile: Default (< 640px) */}
                  <img 
                    src={currentStep.image.mobile} 
                    alt={currentStep.title}
