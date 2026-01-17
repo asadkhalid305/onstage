@@ -1,5 +1,7 @@
 # 🎭 Onstage
 
+[![npm version](https://img.shields.io/npm/v/onstage.svg)](https://www.npmjs.com/package/onstage)
+
 **The premium, plug-and-play onboarding wizard for React.**
 
 Turn your new user experience into a polished, professional tour in minutes. `onstage` provides a beautiful, responsive, and fully customizable modal wizard with zero friction.
