@@ -49,6 +49,12 @@ export interface OnboardingModalProps {
   className?: string;
 
   /**
+   * Whether to allow closing the modal by clicking the overlay or pressing Escape.
+   * @default true
+   */
+  allowClickOutside?: boolean;
+
+  /**
    * Target specific internal elements for styling.
    */
   classNames?: {
@@ -179,6 +185,7 @@ export function OnboardingModal({
   customGradientClass,
   style,
   className,
+  allowClickOutside = true, // Default: Permissive (Click Outside OK)
   classNames = {},
   styles = {},
 }: OnboardingModalProps) {
@@ -234,21 +241,32 @@ export function OnboardingModal({
   const finalGradientClass = customGradientClass || defaultGradientClass;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        // Only allow closing if allowClickOutside is true
+        if (!open && allowClickOutside) {
+          setIsOpen(false);
+        }
+      }}
+    >
       <DialogContent 
         style={{ ...mergedRootStyle, ...styles.content }}
         className={cn(
           isDarkMode && "dark",
-          // Strict: [&>button]:hidden to hide any automatic close buttons
-          "max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden gap-0 z-[50001] [&>button]:hidden rounded-xl sm:rounded-lg",
+          // Removed [&>button]:hidden just in case
+          "max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden gap-0 z-[50001] rounded-xl sm:rounded-lg",
           "bg-background text-foreground",
           activeTheme.className,
           className,
           mergedClassNames.content
         )}
-        // Strict: Click outside and ESC disabled
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => {
+          if (!allowClickOutside) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (!allowClickOutside) e.preventDefault();
+        }}
       >
         {/* Step Image Area */}
         <div 
