@@ -49,18 +49,6 @@ export interface OnboardingModalProps {
   className?: string;
 
   /**
-   * Whether to show the 'X' close button in the corner.
-   * @default true
-   */
-  showCloseButton?: boolean;
-
-  /**
-   * Whether to allow closing the modal by clicking the overlay or pressing Escape.
-   * @default true
-   */
-  allowClickOutside?: boolean;
-
-  /**
    * Target specific internal elements for styling.
    */
   classNames?: {
@@ -191,8 +179,6 @@ export function OnboardingModal({
   customGradientClass,
   style,
   className,
-  showCloseButton = true, // Default: Permissive
-  allowClickOutside = true, // Default: Permissive
   classNames = {},
   styles = {},
 }: OnboardingModalProps) {
@@ -251,22 +237,18 @@ export function OnboardingModal({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent 
         style={{ ...mergedRootStyle, ...styles.content }}
-        hideCloseButton={!showCloseButton}
         className={cn(
           isDarkMode && "dark",
-          // Removed [&>button]:hidden to allow close button
-          "max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden gap-0 z-[50001] rounded-xl sm:rounded-lg",
+          // Strict: [&>button]:hidden to hide any automatic close buttons
+          "max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden gap-0 z-[50001] [&>button]:hidden rounded-xl sm:rounded-lg",
           "bg-background text-foreground",
           activeTheme.className,
           className,
           mergedClassNames.content
         )}
-        onPointerDownOutside={(e) => {
-          if (!allowClickOutside) e.preventDefault();
-        }}
-        onEscapeKeyDown={(e) => {
-          if (!allowClickOutside) e.preventDefault();
-        }}
+        // Strict: Click outside and ESC disabled
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         {/* Step Image Area */}
         <div 
