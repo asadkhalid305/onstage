@@ -1,6 +1,6 @@
 {
   "name": "onstage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A beautiful, plug-and-play React onboarding modal.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
