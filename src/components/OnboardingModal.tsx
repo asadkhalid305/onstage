@@ -1,4 +1,4 @@
-import { CSSProperties } from "react";
+import { CSSProperties, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,22 +11,38 @@ import { Button } from "./ui/button";
 import { useOnboarding } from "../context/OnboardingContext";
 import { cn } from "../lib/utils";
 
+// --- Types ---
+
+export type OnboardingTheme = 
+  | "light" 
+  | "dark" 
+  | "minimal" 
+  | "glass" 
+  | "midnight" 
+  | "ocean" 
+  | "sunset";
+
 export interface OnboardingModalProps {
   /**
-   * Forces the modal to render in a specific theme.
-   * If not set, it follows the system/parent preference.
+   * The aesthetic theme of the modal.
+   * - `light`: Standard light mode.
+   * - `dark`: Standard dark mode.
+   * - `minimal`: Clean, flat, high contrast.
+   * - `glass`: Translucent, frosted glass effect.
+   * - `midnight`: Deep blue/purple premium dark.
+   * - `ocean`: Calming blue gradients.
+   * - `sunset`: Warm orange/red gradients.
    */
-  theme?: "light" | "dark";
+  theme?: OnboardingTheme;
   
   /**
    * Controls the background gradient style.
-   * @default "animated"
+   * Overrides the theme's default if specified.
    */
   gradient?: "animated" | "static" | "none";
 
   /**
    * Pass a custom Tailwind class for the gradient background.
-   * Overrides the `gradient` prop if set.
    */
   customGradientClass?: string;
 
@@ -43,7 +59,6 @@ export interface OnboardingModalProps {
 
   /**
    * Target specific internal elements for styling.
-   * Supports Tailwind classes or standard CSS classes.
    */
   classNames?: {
     overlay?: string;
@@ -81,9 +96,95 @@ export interface OnboardingModalProps {
   };
 }
 
+// --- Theme Configurations ---
+
+type ThemeConfig = {
+  mode: "light" | "dark"; // Controls the base .dark class
+  gradient: "animated" | "static" | "none";
+  className?: string; // Container classes
+  style?: CSSProperties; // CSS Variable overrides
+  classNames?: OnboardingModalProps['classNames']; // Specific element overrides
+};
+
+const THEMES: Record<OnboardingTheme, ThemeConfig> = {
+  light: {
+    mode: "light",
+    gradient: "animated",
+  },
+  dark: {
+    mode: "dark",
+    gradient: "animated",
+  },
+  minimal: {
+    mode: "light",
+    gradient: "none",
+    className: "border-2 border-black shadow-none rounded-none sm:rounded-none",
+    style: {
+      "--radius": "0px",
+      "--primary": "0 0% 0%", // Black
+      "--primary-foreground": "0 0% 100%",
+    } as CSSProperties,
+    classNames: {
+      nextButton: "rounded-none border-2 border-black hover:bg-black hover:text-white transition-none",
+      prevButton: "rounded-none border-2 border-black hover:bg-black hover:text-white transition-none",
+      skipButton: "hover:bg-transparent underline decoration-black underline-offset-4",
+      stepIndicators: "rounded-none",
+      imageContainer: "border-b-2 border-black",
+      content: "rounded-none"
+    }
+  },
+  glass: {
+    mode: "dark",
+    gradient: "animated",
+    className: "bg-black/40 backdrop-blur-xl border-white/10 shadow-2xl",
+    style: {
+      "--primary": "0 0% 100%",
+      "--primary-foreground": "0 0% 0%",
+      "--muted-foreground": "0 0% 80%",
+    } as CSSProperties,
+    classNames: {
+      overlay: "bg-black/60 backdrop-blur-sm",
+      nextButton: "bg-white/90 text-black hover:bg-white",
+      prevButton: "border-white/20 hover:bg-white/10 text-white",
+      skipButton: "text-white/60 hover:text-white",
+      title: "text-white drop-shadow-md",
+      description: "text-white/90 drop-shadow-sm"
+    }
+  },
+  midnight: {
+    mode: "dark",
+    gradient: "animated",
+    style: {
+      "--background": "222 47% 11%", // Deep blue
+      "--foreground": "210 40% 98%",
+      "--primary": "263 70% 50%", // Purple
+      "--primary-foreground": "210 40% 98%",
+    } as CSSProperties,
+    className: "border-indigo-500/30"
+  },
+  ocean: {
+    mode: "light",
+    gradient: "animated",
+    style: {
+      "--primary": "199 89% 48%", // Blue
+      "--primary-foreground": "0 0% 100%",
+    } as CSSProperties,
+    className: "border-cyan-200"
+  },
+  sunset: {
+    mode: "light",
+    gradient: "animated",
+    style: {
+      "--primary": "24 90% 60%", // Orange
+      "--primary-foreground": "0 0% 100%",
+    } as CSSProperties,
+    className: "border-orange-200"
+  }
+};
+
 export function OnboardingModal({
-  theme,
-  gradient = "animated",
+  theme = "light",
+  gradient, // User override
   customGradientClass,
   style,
   className,
@@ -107,11 +208,44 @@ export function OnboardingModal({
   const isLastStep = currentStepIndex === steps.length - 1;
   const isFirstStep = currentStepIndex === 0;
 
+  // --- Theme Merging Logic ---
+  const activeTheme = THEMES[theme] || THEMES.light;
+  
+  // 1. Determine Gradient: Prop override > Theme Default
+  const finalGradient = gradient || activeTheme.gradient;
+  
+  // 2. Determine Mode (Dark/Light class)
+  const isDarkMode = activeTheme.mode === "dark";
+
+  // 3. Merge Styles: Theme styles + User inline styles
+  const mergedRootStyle = { ...activeTheme.style, ...style };
+
+  // 4. Merge ClassNames: Theme classes + User classes
+  // We need to merge nested classNames carefully
+  const mergedClassNames = useMemo(() => {
+    const themeClasses = activeTheme.classNames || {};
+    return {
+      overlay: cn(themeClasses.overlay, classNames.overlay),
+      content: cn(themeClasses.content, classNames.content),
+      imageContainer: cn(themeClasses.imageContainer, classNames.imageContainer),
+      image: cn(themeClasses.image, classNames.image),
+      header: cn(themeClasses.header, classNames.header),
+      title: cn(themeClasses.title, classNames.title),
+      description: cn(themeClasses.description, classNames.description),
+      footer: cn(themeClasses.footer, classNames.footer),
+      stepIndicators: cn(themeClasses.stepIndicators, classNames.stepIndicators),
+      nextButton: cn(themeClasses.nextButton, classNames.nextButton),
+      prevButton: cn(themeClasses.prevButton, classNames.prevButton),
+      skipButton: cn(themeClasses.skipButton, classNames.skipButton),
+      finishButton: cn(themeClasses.finishButton, classNames.finishButton),
+    };
+  }, [activeTheme, classNames]);
+
   if (!isOpen) return null;
 
   // Resolve Gradient Logic
-  const showGradient = gradient !== "none";
-  const defaultGradientClass = gradient === "animated" 
+  const showGradient = finalGradient !== "none";
+  const defaultGradientClass = finalGradient === "animated" 
     ? "bg-gradient-to-br from-primary/30 via-background to-primary/30 animate-gradient-flow"
     : "bg-gradient-to-br from-primary/20 to-background"; // Static fallback
 
@@ -120,15 +254,18 @@ export function OnboardingModal({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent 
-        style={{ ...style, ...styles.content }}
+        style={{ ...mergedRootStyle, ...styles.content }}
         className={cn(
-          // Theme Class
-          theme === "dark" && "dark",
+          // Mode Class
+          isDarkMode && "dark",
           // Base Styles
           "max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden gap-0 z-[50001] [&>button]:hidden rounded-xl sm:rounded-lg",
-          "bg-background text-foreground",
+          "bg-background text-foreground", // Ensures tokens apply
+          // Theme Base Classes
+          activeTheme.className,
+          // User overrides
           className,
-          classNames.content
+          mergedClassNames.content
         )}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
@@ -137,7 +274,7 @@ export function OnboardingModal({
         <div 
           className={cn(
             "w-full h-[600px] relative flex items-center justify-center overflow-hidden bg-background transition-all duration-300",
-            classNames.imageContainer
+            mergedClassNames.imageContainer
           )}
           style={styles.imageContainer}
         >
@@ -147,7 +284,7 @@ export function OnboardingModal({
              )}
              
              {/* Secondary subtle glow */}
-             {showGradient && gradient === "animated" && (
+             {showGradient && finalGradient === "animated" && (
                <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_50%,rgba(var(--primary),0.15),transparent_50%)] animate-pulse" />
              )}
 
@@ -156,14 +293,14 @@ export function OnboardingModal({
                <img 
                  src={currentStep.image} 
                  alt={currentStep.title}
-                 className={cn("object-contain w-full h-full relative z-10 drop-shadow-2xl", classNames.image)}
+                 className={cn("object-contain w-full h-full relative z-10 drop-shadow-2xl", mergedClassNames.image)}
                  style={styles.image}
                  onError={(e) => {
                    e.currentTarget.style.display = 'none';
                  }}
                />
              ) : (
-               <picture className={cn("w-full h-full relative z-10 flex items-center justify-center", classNames.image)} style={styles.image}>
+               <picture className={cn("w-full h-full relative z-10 flex items-center justify-center", mergedClassNames.image)} style={styles.image}>
                  <source media="(min-width: 640px)" srcSet={currentStep.image.desktop} />
                  <img 
                    src={currentStep.image.mobile} 
@@ -178,17 +315,17 @@ export function OnboardingModal({
         </div>
 
         {/* Content Area */}
-        <div className={cn("p-5 sm:p-8", theme === "dark" && "dark text-foreground")}>
+        <div className={cn("p-5 sm:p-8", isDarkMode && "dark text-foreground")}>
           <div className="min-h-[100px] sm:min-h-[140px] flex flex-col justify-center">
-            <DialogHeader className={cn("mb-0", classNames.header)} style={styles.header}>
+            <DialogHeader className={cn("mb-0", mergedClassNames.header)} style={styles.header}>
               <DialogTitle 
-                className={cn("text-2xl sm:text-3xl text-center mb-3 sm:mb-4", classNames.title)}
+                className={cn("text-2xl sm:text-3xl text-center mb-3 sm:mb-4", mergedClassNames.title)}
                 style={styles.title}
               >
                 {currentStep.title}
               </DialogTitle>
               <DialogDescription 
-                className={cn("text-center text-base sm:text-lg max-w-[95%] sm:max-w-[80%] mx-auto", classNames.description)}
+                className={cn("text-center text-base sm:text-lg max-w-[95%] sm:max-w-[80%] mx-auto", mergedClassNames.description)}
                 style={styles.description}
               >
                 {currentStep.description.split("**").map((part, index) => (
@@ -203,12 +340,12 @@ export function OnboardingModal({
           </div>
 
           <DialogFooter 
-            className={cn("relative flex flex-col gap-4 sm:block mt-4 sm:mt-6", classNames.footer)}
+            className={cn("relative flex flex-col gap-4 sm:block mt-4 sm:mt-6", mergedClassNames.footer)}
             style={styles.footer}
           >
             {/* Stepper */}
             <div 
-              className={cn("w-full flex justify-center sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-auto", classNames.stepIndicators)}
+              className={cn("w-full flex justify-center sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-auto", mergedClassNames.stepIndicators)}
               style={styles.stepIndicators}
             >
               {steps.map((_, index) => (
@@ -230,7 +367,7 @@ export function OnboardingModal({
                   variant="ghost"
                   size="lg"
                   onClick={skipOnboarding}
-                  className={cn("text-muted-foreground hover:text-foreground text-sm sm:text-base px-2 sm:px-4", classNames.skipButton)}
+                  className={cn("text-muted-foreground hover:text-foreground text-sm sm:text-base px-2 sm:px-4", mergedClassNames.skipButton)}
                   style={styles.skipButton}
                 >
                   Skip
@@ -245,7 +382,7 @@ export function OnboardingModal({
                     className={cn(
                       isFirstStep && "invisible", 
                       "text-sm sm:text-base px-3 sm:px-6",
-                      classNames.prevButton
+                      mergedClassNames.prevButton
                     )}
                     style={styles.prevButton}
                   >
@@ -256,7 +393,7 @@ export function OnboardingModal({
                     <Button 
                       onClick={finishOnboarding} 
                       size="lg" 
-                      className={cn("bg-primary text-primary-foreground hover:bg-primary/90 text-sm sm:text-base px-4 sm:px-8", classNames.finishButton)}
+                      className={cn("bg-primary text-primary-foreground hover:bg-primary/90 text-sm sm:text-base px-4 sm:px-8", mergedClassNames.finishButton)}
                       style={styles.finishButton}
                     >
                       Get Started
@@ -265,7 +402,7 @@ export function OnboardingModal({
                     <Button 
                       onClick={nextStep} 
                       size="lg" 
-                      className={cn("text-sm sm:text-base px-4 sm:px-8", classNames.nextButton)}
+                      className={cn("text-sm sm:text-base px-4 sm:px-8", mergedClassNames.nextButton)}
                       style={styles.nextButton}
                     >
                       Next
