@@ -34,6 +34,15 @@ export interface OnboardingModalProps {
   gradient?: "animated" | "static" | "none";
 
   /**
+   * Controls the visual style of the backdrop overlay.
+   * - `default`: Standard dark dimming.
+   * - `blur`: Frosted glass effect.
+   * - `transparent`: Invisible overlay.
+   * @default "default"
+   */
+  backdrop?: "default" | "blur" | "transparent";
+
+  /**
    * Pass a custom Tailwind class for the gradient background.
    */
   customGradientClass?: string;
@@ -182,10 +191,11 @@ const THEMES: Record<OnboardingTheme, ThemeConfig> = {
 export function OnboardingModal({
   theme = "light",
   gradient, 
+  backdrop = "default",
   customGradientClass,
   style,
   className,
-  allowClickOutside = true, // Default: Permissive
+  allowClickOutside = true, 
   classNames = {},
   styles = {},
 }: OnboardingModalProps) {
@@ -212,10 +222,20 @@ export function OnboardingModal({
   const isDarkMode = activeTheme.mode === "dark";
   const mergedRootStyle = { ...activeTheme.style, ...style };
 
+  // Resolve Backdrop Class
+  let backdropClass = "";
+  if (backdrop === "blur") backdropClass = "bg-black/40 backdrop-blur-sm";
+  else if (backdrop === "transparent") backdropClass = "bg-transparent";
+  // "default" relies on the default in ui/dialog.tsx (bg-black/80)
+
   const mergedClassNames = useMemo(() => {
     const themeClasses = activeTheme.classNames || {};
     return {
-      overlay: cn(themeClasses.overlay, classNames.overlay),
+      overlay: cn(
+        themeClasses.overlay, 
+        backdropClass, // Apply prop override
+        classNames.overlay
+      ),
       content: cn(themeClasses.content, classNames.content),
       imageContainer: cn(themeClasses.imageContainer, classNames.imageContainer),
       image: cn(themeClasses.image, classNames.image),
@@ -229,7 +249,7 @@ export function OnboardingModal({
       skipButton: cn(themeClasses.skipButton, classNames.skipButton),
       finishButton: cn(themeClasses.finishButton, classNames.finishButton),
     };
-  }, [activeTheme, classNames]);
+  }, [activeTheme, classNames, backdropClass]);
 
   if (!isOpen) return null;
 
@@ -244,19 +264,23 @@ export function OnboardingModal({
     <Dialog 
       open={isOpen} 
       onOpenChange={(open) => {
-        // If closing via internal Radix mechanism (ESC, Click outside)
         if (!open) {
           if (allowClickOutside) {
-            // Trigger skip so parent knows it closed
             skipOnboarding();
           } else {
-            // Force it to stay open if strict mode
             setIsOpen(true);
           }
         }
       }}
     >
+      {/* We need to pass the overlay class to DialogContent, but DialogContent wraps Overlay. 
+          Wait, I need to pass the class TO the Overlay. 
+          
+          In my `ui/dialog.tsx`, `DialogContent` renders `<DialogOverlay />`.
+          I need to update `ui/dialog.tsx` to accept an `overlayClassName` prop.
+      */}
       <DialogContent 
+        overlayClassName={mergedClassNames.overlay}
         style={{ ...mergedRootStyle, ...styles.content }}
         className={cn(
           isDarkMode && "dark",
