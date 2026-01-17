@@ -36,7 +36,7 @@ export interface OnboardingModalProps {
   /**
    * Controls the visual style of the backdrop overlay.
    * - `default`: Standard dark dimming.
-   * - `blur`: Frosted glass effect.
+   * - `blur`: Clean frosted glass effect (blur only).
    * - `transparent`: Invisible overlay.
    * @default "default"
    */
@@ -222,18 +222,17 @@ export function OnboardingModal({
   const isDarkMode = activeTheme.mode === "dark";
   const mergedRootStyle = { ...activeTheme.style, ...style };
 
-  // Resolve Backdrop Class
+  // Resolve Backdrop Class (Strictly Blur or Transparent if selected)
   let backdropClass = "";
-  if (backdrop === "blur") backdropClass = "bg-black/40 backdrop-blur-sm";
+  if (backdrop === "blur") backdropClass = "backdrop-blur-md bg-black/10"; 
   else if (backdrop === "transparent") backdropClass = "bg-transparent";
-  // "default" relies on the default in ui/dialog.tsx (bg-black/80)
 
   const mergedClassNames = useMemo(() => {
     const themeClasses = activeTheme.classNames || {};
     return {
       overlay: cn(
-        themeClasses.overlay, 
-        backdropClass, // Apply prop override
+        // If backdrop prop is set to anything other than default, we override theme overlay
+        backdrop !== "default" ? backdropClass : themeClasses.overlay,
         classNames.overlay
       ),
       content: cn(themeClasses.content, classNames.content),
@@ -249,7 +248,7 @@ export function OnboardingModal({
       skipButton: cn(themeClasses.skipButton, classNames.skipButton),
       finishButton: cn(themeClasses.finishButton, classNames.finishButton),
     };
-  }, [activeTheme, classNames, backdropClass]);
+  }, [activeTheme, classNames, backdrop, backdropClass]);
 
   if (!isOpen) return null;
 
@@ -273,12 +272,6 @@ export function OnboardingModal({
         }
       }}
     >
-      {/* We need to pass the overlay class to DialogContent, but DialogContent wraps Overlay. 
-          Wait, I need to pass the class TO the Overlay. 
-          
-          In my `ui/dialog.tsx`, `DialogContent` renders `<DialogOverlay />`.
-          I need to update `ui/dialog.tsx` to accept an `overlayClassName` prop.
-      */}
       <DialogContent 
         overlayClassName={mergedClassNames.overlay}
         style={{ ...mergedRootStyle, ...styles.content }}
