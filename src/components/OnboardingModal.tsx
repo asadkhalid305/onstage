@@ -185,7 +185,7 @@ export function OnboardingModal({
   customGradientClass,
   style,
   className,
-  allowClickOutside = true, // Default: Permissive (Click Outside OK)
+  allowClickOutside = true, // Default: Permissive
   classNames = {},
   styles = {},
 }: OnboardingModalProps) {
@@ -243,18 +243,12 @@ export function OnboardingModal({
   return (
     <Dialog 
       open={isOpen} 
-      onOpenChange={(open) => {
-        // Only allow closing if allowClickOutside is true
-        if (!open && allowClickOutside) {
-          setIsOpen(false);
-        }
-      }}
+      onOpenChange={setIsOpen} // Simplified: Rely on event prevention below
     >
       <DialogContent 
         style={{ ...mergedRootStyle, ...styles.content }}
         className={cn(
           isDarkMode && "dark",
-          // Removed [&>button]:hidden just in case
           "max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden gap-0 z-[50001] rounded-xl sm:rounded-lg",
           "bg-background text-foreground",
           activeTheme.className,
