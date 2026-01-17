@@ -25,19 +25,11 @@ export type OnboardingTheme =
 export interface OnboardingModalProps {
   /**
    * The aesthetic theme of the modal.
-   * - `light`: Standard light mode.
-   * - `dark`: Standard dark mode.
-   * - `minimal`: Clean, flat, high contrast.
-   * - `glass`: Translucent, frosted glass effect.
-   * - `midnight`: Deep blue/purple premium dark.
-   * - `ocean`: Calming blue gradients.
-   * - `sunset`: Warm orange/red gradients.
    */
   theme?: OnboardingTheme;
   
   /**
    * Controls the background gradient style.
-   * Overrides the theme's default if specified.
    */
   gradient?: "animated" | "static" | "none";
 
@@ -48,7 +40,6 @@ export interface OnboardingModalProps {
 
   /**
    * Inline styles to apply to the modal content.
-   * Useful for overriding CSS variables without a global stylesheet.
    */
   style?: CSSProperties;
 
@@ -99,11 +90,11 @@ export interface OnboardingModalProps {
 // --- Theme Configurations ---
 
 type ThemeConfig = {
-  mode: "light" | "dark"; // Controls the base .dark class
+  mode: "light" | "dark"; 
   gradient: "animated" | "static" | "none";
-  className?: string; // Container classes
-  style?: CSSProperties; // CSS Variable overrides
-  classNames?: OnboardingModalProps['classNames']; // Specific element overrides
+  className?: string; 
+  style?: CSSProperties; 
+  classNames?: OnboardingModalProps['classNames']; 
 };
 
 const THEMES: Record<OnboardingTheme, ThemeConfig> = {
@@ -121,7 +112,7 @@ const THEMES: Record<OnboardingTheme, ThemeConfig> = {
     className: "border-2 border-black shadow-none rounded-none sm:rounded-none",
     style: {
       "--radius": "0px",
-      "--primary": "0 0% 0%", // Black
+      "--primary": "0 0% 0%", 
       "--primary-foreground": "0 0% 100%",
     } as CSSProperties,
     classNames: {
@@ -155,9 +146,9 @@ const THEMES: Record<OnboardingTheme, ThemeConfig> = {
     mode: "dark",
     gradient: "animated",
     style: {
-      "--background": "222 47% 11%", // Deep blue
+      "--background": "222 47% 11%", 
       "--foreground": "210 40% 98%",
-      "--primary": "263 70% 50%", // Purple
+      "--primary": "263 70% 50%", 
       "--primary-foreground": "210 40% 98%",
     } as CSSProperties,
     className: "border-indigo-500/30"
@@ -166,7 +157,7 @@ const THEMES: Record<OnboardingTheme, ThemeConfig> = {
     mode: "light",
     gradient: "animated",
     style: {
-      "--primary": "199 89% 48%", // Blue
+      "--primary": "199 89% 48%", 
       "--primary-foreground": "0 0% 100%",
     } as CSSProperties,
     className: "border-cyan-200"
@@ -175,7 +166,7 @@ const THEMES: Record<OnboardingTheme, ThemeConfig> = {
     mode: "light",
     gradient: "animated",
     style: {
-      "--primary": "24 90% 60%", // Orange
+      "--primary": "24 90% 60%", 
       "--primary-foreground": "0 0% 100%",
     } as CSSProperties,
     className: "border-orange-200"
@@ -184,7 +175,7 @@ const THEMES: Record<OnboardingTheme, ThemeConfig> = {
 
 export function OnboardingModal({
   theme = "light",
-  gradient, // User override
+  gradient, 
   customGradientClass,
   style,
   className,
@@ -210,17 +201,10 @@ export function OnboardingModal({
 
   // --- Theme Merging Logic ---
   const activeTheme = THEMES[theme] || THEMES.light;
-  
-  // 1. Determine Gradient: Prop override > Theme Default
   const finalGradient = gradient || activeTheme.gradient;
-  
-  // 2. Determine Mode (Dark/Light class)
   const isDarkMode = activeTheme.mode === "dark";
-
-  // 3. Merge Styles: Theme styles + User inline styles
   const mergedRootStyle = { ...activeTheme.style, ...style };
 
-  // 4. Merge ClassNames: Theme classes + User classes
   const mergedClassNames = useMemo(() => {
     const themeClasses = activeTheme.classNames || {};
     return {
@@ -242,11 +226,10 @@ export function OnboardingModal({
 
   if (!isOpen) return null;
 
-  // Resolve Gradient Logic
   const showGradient = finalGradient !== "none";
   const defaultGradientClass = finalGradient === "animated" 
     ? "bg-gradient-to-br from-primary/30 via-background to-primary/30 animate-gradient-flow"
-    : "bg-gradient-to-br from-primary/20 to-background"; // Static fallback
+    : "bg-gradient-to-br from-primary/20 to-background"; 
 
   const finalGradientClass = customGradientClass || defaultGradientClass;
 
@@ -255,39 +238,39 @@ export function OnboardingModal({
       <DialogContent 
         style={{ ...mergedRootStyle, ...styles.content }}
         className={cn(
-          // Mode Class
           isDarkMode && "dark",
           // Base Styles
           "max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden gap-0 z-[50001] [&>button]:hidden rounded-xl sm:rounded-lg",
-          "bg-background text-foreground", // Ensures tokens apply
-          // Theme Base Classes
+          "bg-background text-foreground",
           activeTheme.className,
-          // User overrides
           className,
           mergedClassNames.content
         )}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        {/* Step Image Area */}
+        {/* Step Image Area - RESPONSIVE ASPECT RATIOS */}
         <div 
           className={cn(
-            "w-full h-[600px] relative flex items-center justify-center overflow-hidden bg-background transition-all duration-300",
+            "w-full relative flex items-center justify-center overflow-hidden bg-background transition-all duration-300",
+            // Mobile: 4/5 aspect ratio
+            "aspect-[4/5]",
+            // Tablet: 4/3 aspect ratio
+            "sm:aspect-[4/3]", 
+            // Desktop: 16/9 aspect ratio
+            "lg:aspect-[16/9]",
             mergedClassNames.imageContainer
           )}
           style={styles.imageContainer}
         >
-             {/* Gradient Layer */}
              {showGradient && (
                <div className={cn("absolute inset-0 z-0", finalGradientClass)} />
              )}
              
-             {/* Secondary subtle glow */}
              {showGradient && finalGradient === "animated" && (
                <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_50%,rgba(var(--primary),0.15),transparent_50%)] animate-pulse" />
              )}
 
-             {/* Main Image Layer */}
              {typeof currentStep.image === 'string' ? (
                <img 
                  src={currentStep.image} 
@@ -303,7 +286,7 @@ export function OnboardingModal({
                  {/* Desktop: > 1024px */}
                  <source media="(min-width: 1024px)" srcSet={currentStep.image.desktop} />
                  
-                 {/* Tablet: > 640px. Uses tablet image if available, otherwise falls back to desktop */}
+                 {/* Tablet: > 640px */}
                  <source media="(min-width: 640px)" srcSet={currentStep.image.tablet || currentStep.image.desktop} />
                  
                  {/* Mobile: Default (< 640px) */}
@@ -319,7 +302,6 @@ export function OnboardingModal({
              )}
         </div>
 
-        {/* Content Area */}
         <div className={cn("p-5 sm:p-8", isDarkMode && "dark text-foreground")}>
           <div className="min-h-[100px] sm:min-h-[140px] flex flex-col justify-center">
             <DialogHeader className={cn("mb-0", mergedClassNames.header)} style={styles.header}>
@@ -348,7 +330,6 @@ export function OnboardingModal({
             className={cn("relative flex flex-col gap-4 sm:block mt-4 sm:mt-6", mergedClassNames.footer)}
             style={styles.footer}
           >
-            {/* Stepper */}
             <div 
               className={cn("w-full flex justify-center sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-auto", mergedClassNames.stepIndicators)}
               style={styles.stepIndicators}
@@ -366,7 +347,6 @@ export function OnboardingModal({
               ))}
             </div>
             
-             {/* Buttons */}
              <div className="flex w-full justify-between items-center relative z-10 box-border">
                <Button
                   variant="ghost"
