@@ -50,13 +50,13 @@ export interface OnboardingModalProps {
 
   /**
    * Whether to show the 'X' close button in the corner.
-   * @default false
+   * @default true
    */
   showCloseButton?: boolean;
 
   /**
    * Whether to allow closing the modal by clicking the overlay or pressing Escape.
-   * @default false
+   * @default true
    */
   allowClickOutside?: boolean;
 
@@ -191,8 +191,8 @@ export function OnboardingModal({
   customGradientClass,
   style,
   className,
-  showCloseButton = false,
-  allowClickOutside = false,
+  showCloseButton = true, // Default: Permissive
+  allowClickOutside = true, // Default: Permissive
   classNames = {},
   styles = {},
 }: OnboardingModalProps) {
@@ -254,6 +254,7 @@ export function OnboardingModal({
         hideCloseButton={!showCloseButton}
         className={cn(
           isDarkMode && "dark",
+          // Removed [&>button]:hidden to allow close button
           "max-w-[95vw] sm:max-w-[1000px] p-0 overflow-hidden gap-0 z-[50001] rounded-xl sm:rounded-lg",
           "bg-background text-foreground",
           activeTheme.className,
