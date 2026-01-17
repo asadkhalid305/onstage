@@ -243,7 +243,18 @@ export function OnboardingModal({
   return (
     <Dialog 
       open={isOpen} 
-      onOpenChange={setIsOpen} // Simplified: Rely on event prevention below
+      onOpenChange={(open) => {
+        // If closing via internal Radix mechanism (ESC, Click outside)
+        if (!open) {
+          if (allowClickOutside) {
+            // Trigger skip so parent knows it closed
+            skipOnboarding();
+          } else {
+            // Force it to stay open if strict mode
+            setIsOpen(true);
+          }
+        }
+      }}
     >
       <DialogContent 
         style={{ ...mergedRootStyle, ...styles.content }}
