@@ -4,7 +4,7 @@
 
 Turn your new user experience into a polished, professional tour in minutes. `onstage` provides a beautiful, responsive, and fully customizable modal wizard with zero friction.
 
-![Onstage Demo](demo.gif)
+![Onstage Demo](https://raw.githubusercontent.com/asadkhalid305/onstage/main/demo.gif)
 
 > **[Try the Interactive Builder & Gallery](https://onstage-demo.vercel.app)**  
 > Design your modal in real-time and copy the code.
